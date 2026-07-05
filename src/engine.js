@@ -15,7 +15,7 @@
 // "bestmove ..."), tout en laissant le calcul se faire dans le Worker (donc
 // sans jamais bloquer l'interface).
 
-const ENGINE_URL = '/engine/stockfish-18-lite-single.js';
+const ENGINE_URL = import.meta.env.BASE_URL + 'engine/stockfish-18-lite-single.js';
 
 export class Engine {
   /**

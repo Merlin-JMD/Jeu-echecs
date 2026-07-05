@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Échecs — Contre Stockfish</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Jeu d'<span>Échecs</span></h1>
+    <div class="subtitle" id="subtitle">Vous jouez les blancs — Stockfish joue les noirs</div>
+  </header>
+
+  <div class="layout">
+    <div class="board-col">
+      <div id="board" aria-label="Échiquier"></div>
+      <div class="coords" id="coords">a &nbsp; b &nbsp; c &nbsp; d &nbsp; e &nbsp; f &nbsp; g &nbsp; h</div>
+    </div>
+
+    <div class="panel">
+      <div>
+        <h2>Niveau de Stockfish</h2>
+        <div class="levels" id="levels"></div>
+      </div>
+
+      <div>
+        <h2>Couleur</h2>
+        <div class="levels" id="colors"></div>
+      </div>
+
+      <div>
+        <h2>Partie</h2>
+        <div class="status" id="status">Chargement du moteur…</div>
+        <div class="captured" id="capturedWhite"></div>
+        <div class="captured" id="capturedBlack"></div>
+      </div>
+
+      <div>
+        <h2>Coups joués</h2>
+        <div class="history" id="history"></div>
+      </div>
+
+      <div class="actions">
+        <button class="reset" id="resetBtn">Nouvelle partie</button>
+        <button class="secondary" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
+      </div>
+
+      <div class="footnote">Moteur : Stockfish (WASM, single-thread), exécuté dans un Web Worker via UCI. Niveaux réglés via UCI_LimitStrength / UCI_Elo / Skill Level.</div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

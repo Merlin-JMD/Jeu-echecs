@@ -1,0 +1,21 @@
+{
+  "name": "echecs-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Jeu d'échecs local avec adversaire Stockfish (Web Worker, niveaux réglables).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "postinstall": "node scripts/fetch-engine.mjs",
+    "fetch-engine": "node scripts/fetch-engine.mjs"
+  },
+  "dependencies": {
+    "chess.js": "^1.0.0",
+    "stockfish": "^18.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}

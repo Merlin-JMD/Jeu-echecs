@@ -33,8 +33,6 @@ const levelsEl = document.getElementById('levels');
 const colorsEl = document.getElementById('colors');
 const capturedWhiteEl = document.getElementById('capturedWhite');
 const capturedBlackEl = document.getElementById('capturedBlack');
-const historyWhiteEl = document.getElementById('historyWhite');
-const historyBlackEl = document.getElementById('historyBlack');
 const subtitleEl = document.getElementById('subtitle');
 const resetBtn = document.getElementById('resetBtn');
 const undoBtn = document.getElementById('undoBtn');
@@ -235,36 +233,6 @@ function updateCaptured() {
   capturedBlackEl.textContent = byBlack.join(' ');
 }
 
-function updateHistory() {
-  const history = game.history();
-  historyWhiteEl.innerHTML = '';
-  historyBlackEl.innerHTML = '';
-  for (let i = 0; i < history.length; i++) {
-    const num = Math.floor(i / 2) + 1;
-    const isWhite = i % 2 === 0;
-
-    const row = document.createElement('div');
-    row.className = 'move-row';
-
-    const numEl = document.createElement('span');
-    numEl.className = 'num';
-    numEl.textContent = isWhite ? `${num}.` : '';
-
-    const moveEl = document.createElement('span');
-    moveEl.textContent = history[i];
-
-    row.appendChild(numEl);
-    row.appendChild(moveEl);
-
-    if (isWhite) {
-      historyWhiteEl.appendChild(row);
-    } else {
-      historyBlackEl.appendChild(row);
-    }
-  }
-  historyWhiteEl.scrollTop = historyWhiteEl.scrollHeight;
-  historyBlackEl.scrollTop = historyBlackEl.scrollHeight;
-}
 
 function updateStatus() {
   if (engineError) {
@@ -297,7 +265,6 @@ function updateStatus() {
 function render() {
   boardView.render({ game, selected, legalTargets, lastMove });
   updateCaptured();
-  updateHistory();
 }
 
 function resetGame() {

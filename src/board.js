@@ -33,7 +33,12 @@ export class BoardView {
     this.flipped = flipped;
     if (this.coordsEl) {
       const files = this.flipped ? [...FILES].reverse() : FILES;
-      this.coordsEl.textContent = files.join('   ');
+      this.coordsEl.innerHTML = '';
+      files.forEach((f) => {
+        const span = document.createElement('span');
+        span.textContent = f;
+        this.coordsEl.appendChild(span);
+      });
     }
     if (this.ranksEl) {
       const ranks = this.flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];

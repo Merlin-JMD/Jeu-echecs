@@ -3,70 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Échecs — Contre Stockfish</title>
+<title>&Eacute;checs &mdash; Contre Stockfish</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
   <header id="topHeader">
-    <h1>Jeu d'<span>Échecs</span></h1>
-    <div class="subtitle" id="subtitle">Vous jouez les blancs — Stockfish joue les noirs</div>
+    <h1>Jeu d'<span>&Eacute;checs</span></h1>
   </header>
-
   <div class="layout">
     <div class="board-col">
       <div class="board-row">
         <div class="ranks" id="ranks"></div>
-        <div id="board" aria-label="Échiquier"></div>
+        <div id="board" aria-label="&Eacute;chiquier"></div>
       </div>
       <div class="coords" id="coords"></div>
     </div>
-
     <div class="panel" id="topPanel">
       <div>
         <h2>Niveau de Stockfish</h2>
         <div class="levels" id="levels"></div>
       </div>
-
       <div id="colorSection">
         <h2>Couleur</h2>
         <div class="levels" id="colors"></div>
       </div>
     </div>
   </div>
-
   <div class="bottom-bar">
     <div class="bottom-card">
-      <div class="status" id="status">Chargement du moteur…</div>
+      <div class="status" id="status"></div>
       <div class="captured" id="capturedWhite"></div>
       <div class="captured" id="capturedBlack"></div>
     </div>
-
-    
-
     <div class="bottom-card bottom-actions-card">
       <div class="actions">
-        <button class="reset" id="resetBtn">Nouvelle partie</button>
-        <button class="secondary" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
-        <button class="secondary" id="rulesBtn">? Rappel des règlements</button>
+        <button class="reset hidden-ingame" id="resetBtn">Nouvelle partie</button>
+        <button class="secondary hidden-ingame" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
+        <button class="secondary" id="rulesBtn">? Rappel des r&egrave;glements</button>
       </div>
     </div>
   </div>
 </div>
-
 <div class="modal-overlay" id="welcomeOverlay">
   <div class="modal">
-    <h2>Bienvenue au jeu d'Échecs</h2>
-    <p>Cette application suit les règles internationales standard. Votre adversaire est Stockfish, un moteur d'échecs professionnel, réglé sur 4 niveaux de force.</p>
+    <h2>Bienvenue au jeu d'&Eacute;checs</h2>
+    <p>Cette application suit les r&egrave;gles internationales standard. Votre adversaire est Stockfish, un moteur d'&eacute;checs professionnel, r&eacute;gl&eacute; sur 4 niveaux de force.</p>
     <ul>
-      <li><strong>Étape 1</strong> — choisissez le niveau de Stockfish (coté en Elo international).</li>
-      <li><strong>Étape 2</strong> — choisissez votre couleur pour la toute première partie ; cela détermine qui commence.</li>
-      <li>À partir de la deuxième partie, les couleurs alternent automatiquement à chaque nouvelle partie, comme le veut la tradition des tournois.</li>
+      <li><strong>&Eacute;tape 1</strong> &mdash; choisissez le niveau de Stockfish (cot&eacute; en Elo international).</li>
+      <li><strong>&Eacute;tape 2</strong> &mdash; choisissez votre couleur pour la toute premi&egrave;re partie ; cela d&eacute;termine qui commence.</li>
+      <li>&Agrave; partir de la deuxi&egrave;me partie, les couleurs alternent automatiquement &agrave; chaque nouvelle partie, comme le veut la tradition des tournois.</li>
     </ul>
     <button class="reset" id="welcomeCloseBtn">Compris, commencer</button>
   </div>
 </div>
-
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>

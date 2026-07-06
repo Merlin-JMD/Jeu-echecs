@@ -18,6 +18,8 @@ const COLORS = [
 const game = new Chess();
 let currentLevel = LEVELS[1];
 let playerColor = 'w';
+let colorChosen = false;
+let gameStarted = false;
 let selected = null;
 let legalTargets = [];
 let lastMove = null;
@@ -33,7 +35,6 @@ const levelsEl = document.getElementById('levels');
 const colorsEl = document.getElementById('colors');
 const capturedWhiteEl = document.getElementById('capturedWhite');
 const capturedBlackEl = document.getElementById('capturedBlack');
-const subtitleEl = document.getElementById('subtitle');
 const resetBtn = document.getElementById('resetBtn');
 const undoBtn = document.getElementById('undoBtn');
 const rulesBtn = document.getElementById('rulesBtn');
@@ -63,12 +64,30 @@ function colorLabel(key) {
   return key === 'w' ? 'Blancs' : 'Noirs';
 }
 
-function applyColorToUI() {
-  boardView.setFlipped(playerColor === 'b');
-  subtitleEl.textContent =
-    playerColor === 'w'
-      ? "Vous jouez les blancs \u2014 Stockfish joue les noirs"
-      : "Vous jouez les noirs \u2014 Stockfish joue les blancs";
+function revealActionButtons() {
+  gameStarted = true;
+  resetBtn.classList.remove('hidden-ingame');
+  undoBtn.classList.remove('hidden-ingame');
+}
+function renderLevels() {
+  levelsEl.innerHTML = '';
+  LEVELS.forEach((lvl) => {
+    const btn = document.createElement('button');
+    btn.className = 'level-btn' + (lvl.key === currentLevel.key ? ' active' : '');
+    btn.disabled = aiThinking;
+    btn.innerHTML = `<span>${lvl.label}</span><small>${lvl.hint}</small>`;
+    btn.onclick = () => {
+      currentLevel = lvl;
+      sendLevelToEngine();
+      renderLevels();
+    };
+    levelsEl.appendChild(btn);
+  });
+}
+
+function sendLevelToEngine() {
+  if (!engineReady) return;
+  engine.setLevel(currentLevel);
 }
 
 const engine = new Engine({
@@ -90,27 +109,6 @@ const engine = new Engine({
   }
 });
 
-function sendLevelToEngine() {
-  if (!engineReady) return;
-  engine.setLevel(currentLevel);
-}
-
-function renderLevels() {
-  levelsEl.innerHTML = '';
-  LEVELS.forEach((lvl) => {
-    const btn = document.createElement('button');
-    btn.className = 'level-btn' + (lvl.key === currentLevel.key ? ' active' : '');
-    btn.disabled = aiThinking;
-    btn.innerHTML = `<span>${lvl.label}</span><small>${lvl.hint}</small>`;
-    btn.onclick = () => {
-      currentLevel = lvl;
-      sendLevelToEngine();
-      renderLevels();
-    };
-    levelsEl.appendChild(btn);
-  });
-}
-
 function renderColors() {
   if (colorLocked) {
     colorsEl.innerHTML = '';
@@ -123,21 +121,24 @@ function renderColors() {
   colorsEl.innerHTML = '';
   COLORS.forEach((c) => {
     const btn = document.createElement('button');
-    btn.className = 'level-btn' + (c.key === playerColor ? ' active' : '');
+    btn.className = 'level-btn' + (c.key === playerColor && colorChosen ? ' active' : '');
     btn.disabled = aiThinking;
     btn.innerHTML = `<span>${c.label}</span><small>${c.hint}</small>`;
     btn.onclick = () => {
-      if (c.key === playerColor) return;
       playerColor = c.key;
-      applyColorToUI();
-      resetGame();
+      colorChosen = true;
+      colorLocked = true;
+      boardView.setFlipped(playerColor === 'b');
+      updateStatus();
       renderColors();
+      maybeTriggerEngineOpeningMove();
     };
     colorsEl.appendChild(btn);
   });
 }
+
 function onSquareClick(id) {
-  if (!engineReady || aiThinking || game.isGameOver()) return;
+  if (!colorChosen || !engineReady || aiThinking || game.isGameOver()) return;
   if (game.turn() !== playerColor) return;
 
   if (selected) {
@@ -179,9 +180,9 @@ function makeHumanMove(from, to) {
   if (needsPromotion) moveObj.promotion = 'q';
   const result = game.move(moveObj);
   if (result) lastMove = { from: result.from, to: result.to };
+  if (result && !gameStarted) revealActionButtons();
   return result;
 }
-
 function afterPlyPlayed() {
   updateStatus();
   if (game.isGameOver()) return;
@@ -202,6 +203,7 @@ function applyEngineMove(msg) {
   } else {
     engineError = `Coup re\u00E7u du moteur invalide (${msg.from}${msg.to}) \u2014 position d\u00E9synchronis\u00E9e.`;
   }
+  if (result && !gameStarted) revealActionButtons();
   render();
   renderLevels();
   renderColors();
@@ -209,7 +211,7 @@ function applyEngineMove(msg) {
 }
 
 function maybeTriggerEngineOpeningMove() {
-  if (playerColor === 'b' && game.turn() === 'w' && game.history().length === 0 && !aiThinking) {
+  if (colorChosen && playerColor === 'b' && game.turn() === 'w' && game.history().length === 0 && !aiThinking) {
     aiThinking = true;
     renderLevels();
     renderColors();
@@ -217,6 +219,7 @@ function maybeTriggerEngineOpeningMove() {
     engine.go(game.fen());
   }
 }
+
 function updateCaptured() {
   const history = game.history({ verbose: true });
   const byWhite = [];
@@ -232,9 +235,11 @@ function updateCaptured() {
   capturedWhiteEl.textContent = byWhite.join(' ');
   capturedBlackEl.textContent = byBlack.join(' ');
 }
-
-
 function updateStatus() {
+  if (!colorChosen) {
+    statusEl.innerHTML = '';
+    return;
+  }
   if (engineError) {
     statusEl.innerHTML = `<span class="error">${engineError}</span>`;
     return;
@@ -257,11 +262,17 @@ function updateStatus() {
     statusEl.innerHTML = `<span class="thinking">Stockfish (${currentLevel.label}) r\u00E9fl\u00E9chit\u2026</span>`;
     return;
   }
+  if (game.history().length === 0) {
+    const oppColor = playerColor === 'w' ? 'b' : 'w';
+    statusEl.innerHTML = `<span class="turn">Vous jouez les ${colorLabel(playerColor)}</span> \u2014 Stockfish joue les ${colorLabel(oppColor)}`;
+    return;
+  }
   const isPlayerTurn = game.turn() === playerColor;
   const turnLabel = isPlayerTurn ? '\u00C0 vous de jouer' : 'Tour de Stockfish';
   const checkLabel = game.inCheck() ? ' \u2014 \u00E9chec !' : '';
   statusEl.innerHTML = `<span class="turn">${turnLabel}</span>${checkLabel}`;
 }
+
 function render() {
   boardView.render({ game, selected, legalTargets, lastMove });
   updateCaptured();
@@ -299,11 +310,9 @@ function undoLastPlayerMove() {
 }
 
 function startNewGame() {
-  if (colorLocked) {
+  if (colorLocked && colorChosen) {
     playerColor = playerColor === 'w' ? 'b' : 'w';
-    applyColorToUI();
-  } else {
-    colorLocked = true;
+    boardView.setFlipped(playerColor === 'b');
   }
   renderColors();
   resetGame();

@@ -18,11 +18,13 @@ export class BoardView {
    * @param {Object} opts
    * @param {HTMLElement} opts.boardEl
    * @param {HTMLElement} [opts.coordsEl]
+   * @param {HTMLElement} [opts.ranksEl]
    * @param {(squareId: string) => void} opts.onSquareClick
    */
-  constructor({ boardEl, coordsEl, onSquareClick }) {
+  constructor({ boardEl, coordsEl, ranksEl, onSquareClick }) {
     this.boardEl = boardEl;
     this.coordsEl = coordsEl;
+    this.ranksEl = ranksEl;
     this.onSquareClick = onSquareClick;
     this.flipped = false;
   }
@@ -32,6 +34,15 @@ export class BoardView {
     if (this.coordsEl) {
       const files = this.flipped ? [...FILES].reverse() : FILES;
       this.coordsEl.textContent = files.join('   ');
+    }
+    if (this.ranksEl) {
+      const ranks = this.flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
+      this.ranksEl.innerHTML = '';
+      ranks.forEach((n) => {
+        const span = document.createElement('span');
+        span.textContent = String(n);
+        this.ranksEl.appendChild(span);
+      });
     }
   }
 

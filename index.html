@@ -8,47 +8,74 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header id="topHeader">
     <h1>Jeu d'<span>Échecs</span></h1>
     <div class="subtitle" id="subtitle">Vous jouez les blancs — Stockfish joue les noirs</div>
   </header>
 
   <div class="layout">
     <div class="board-col">
-      <div id="board" aria-label="Échiquier"></div>
-      <div class="coords" id="coords">a &nbsp; b &nbsp; c &nbsp; d &nbsp; e &nbsp; f &nbsp; g &nbsp; h</div>
+      <div class="board-row">
+        <div class="ranks" id="ranks"></div>
+        <div id="board" aria-label="Échiquier"></div>
+      </div>
+      <div class="coords" id="coords"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="topPanel">
       <div>
         <h2>Niveau de Stockfish</h2>
         <div class="levels" id="levels"></div>
       </div>
 
-      <div>
+      <div id="colorSection">
         <h2>Couleur</h2>
         <div class="levels" id="colors"></div>
       </div>
+    </div>
+  </div>
 
-      <div>
-        <h2>Partie</h2>
-        <div class="status" id="status">Chargement du moteur…</div>
-        <div class="captured" id="capturedWhite"></div>
-        <div class="captured" id="capturedBlack"></div>
+  <div class="bottom-bar">
+    <div class="bottom-card">
+      <div class="status" id="status">Chargement du moteur…</div>
+      <div class="captured" id="capturedWhite"></div>
+      <div class="captured" id="capturedBlack"></div>
+    </div>
+
+    <div class="bottom-card bottom-history-card">
+      <h2>Coups joués</h2>
+      <div class="history-cols">
+        <div class="history-col">
+          <div class="history-col-title">Blancs</div>
+          <div class="history-list" id="historyWhite"></div>
+        </div>
+        <div class="history-col">
+          <div class="history-col-title">Noirs</div>
+          <div class="history-list" id="historyBlack"></div>
+        </div>
       </div>
+    </div>
 
-      <div>
-        <h2>Coups joués</h2>
-        <div class="history" id="history"></div>
-      </div>
-
+    <div class="bottom-card bottom-actions-card">
       <div class="actions">
         <button class="reset" id="resetBtn">Nouvelle partie</button>
         <button class="secondary" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
+        <button class="secondary" id="rulesBtn">? Rappel des règlements</button>
       </div>
-
-      <div class="footnote">Moteur : Stockfish (WASM, single-thread), exécuté dans un Web Worker via UCI. Niveaux réglés via UCI_LimitStrength / UCI_Elo / Skill Level.</div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="welcomeOverlay">
+  <div class="modal">
+    <h2>Bienvenue au jeu d'Échecs</h2>
+    <p>Cette application suit les règles internationales standard. Votre adversaire est Stockfish, un moteur d'échecs professionnel, réglé sur 4 niveaux de force.</p>
+    <ul>
+      <li><strong>Étape 1</strong> — choisissez le niveau de Stockfish (coté en Elo international).</li>
+      <li><strong>Étape 2</strong> — choisissez votre couleur pour la toute première partie ; cela détermine qui commence.</li>
+      <li>À partir de la deuxième partie, les couleurs alternent automatiquement à chaque nouvelle partie, comme le veut la tradition des tournois.</li>
+    </ul>
+    <button class="reset" id="welcomeCloseBtn">Compris, commencer</button>
   </div>
 </div>
 

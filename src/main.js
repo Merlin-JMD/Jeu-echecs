@@ -274,7 +274,7 @@ function updateStatus() {
 }
 
 function render() {
-  boardView.render({ game, selected, legalTargets, lastMove });
+  boardView.render({ game, selected, legalTargets, lastMove, playerColor });
   updateCaptured();
 }
 

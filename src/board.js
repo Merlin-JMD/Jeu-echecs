@@ -1,15 +1,24 @@
-// Rendu de l'échiquier en grille de <div>, façon prototype, mais modularisé
-// et prêt à gérer l'orientation (jouer les blancs ou les noirs).
+// Rendu de l'\u00e9chiquier en grille de <div>, avec images 3D des pi\u00e8ces
+// et gestion de l'orientation (jouer les blancs ou les noirs).
 
-const UNICODE = {
-  p: '♟', n: '♞', b: '♝', r: '♜', q: '♛', k: '♚',
-  P: '♙', N: '♘', B: '♗', R: '♖', Q: '♕', K: '♔'
-};
+const PIECE_NAMES = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
+const PIECES_BASE_PATH = import.meta.env.BASE_URL + 'assets/pieces/';
+
+function pieceImagePath(piece, playerColor) {
+  const colorName = piece.color === 'w' ? 'white' : 'black';
+  const typeName = PIECE_NAMES[piece.type];
+  if (piece.type === 'n') {
+    const isMine = piece.color === playerColor;
+    const view = isMine ? 'back' : 'front';
+    return PIECES_BASE_PATH + 'knight-' + colorName + '-' + view + '.png';
+  }
+  return PIECES_BASE_PATH + typeName + '-' + colorName + '.png';
+}
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 function idFromBoardCoords(boardRow, boardCol) {
-  // boardRow/boardCol suivent l'indexation de chess.js .board() : 0 = rangée 8, 0 = colonne a
+  // boardRow/boardCol suivent l'indexation de chess.js .board() : 0 = rang\u00e9e 8, 0 = colonne a
   return FILES[boardCol] + (8 - boardRow);
 }
 
@@ -57,9 +66,10 @@ export class BoardView {
    * @param {string|null} state.selected
    * @param {string[]} state.legalTargets
    * @param {{from:string,to:string}|null} state.lastMove
+   * @param {string} state.playerColor - 'w' ou 'b', pour choisir la vue du cavalier
    */
   render(state) {
-    const { game, selected, legalTargets, lastMove } = state;
+    const { game, selected, legalTargets, lastMove, playerColor } = state;
     this.boardEl.innerHTML = '';
     const boardState = game.board();
     const checkSquare = this.getCheckSquare(game);
@@ -77,8 +87,12 @@ export class BoardView {
 
         const piece = boardState[boardRow][boardCol];
         if (piece) {
-          const symbol = piece.color === 'w' ? UNICODE[piece.type.toUpperCase()] : UNICODE[piece.type];
-          sq.textContent = symbol;
+          const img = document.createElement('img');
+          img.src = pieceImagePath(piece, playerColor);
+          img.alt = piece.type;
+          img.className = 'piece-img ptype-' + piece.type;
+          img.draggable = false;
+          sq.appendChild(img);
           sq.classList.add(piece.color === 'w' ? 'piece-w' : 'piece-b');
         }
 
@@ -113,5 +127,3 @@ export class BoardView {
     return null;
   }
 }
-
-export { UNICODE };

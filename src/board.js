@@ -56,6 +56,7 @@ export class BoardView {
     this.boardEl.innerHTML = '';
     const boardState = game.board();
     const checkSquare = this.getCheckSquare(game);
+    const isCheckmate = game.isCheckmate();
 
     for (let screenRow = 0; screenRow < 8; screenRow++) {
       for (let screenCol = 0; screenCol < 8; screenCol++) {
@@ -73,7 +74,11 @@ export class BoardView {
           const img = document.createElement('img');
           img.src = pieceImagePath(piece, screenCol);
           img.alt = piece.type;
-          img.className = 'piece-img ptype-' + piece.type;
+          let imgClass = 'piece-img ptype-' + piece.type;
+          if (isCheckmate && piece.type === 'k' && id === checkSquare) {
+            imgClass += ' king-fallen';
+          }
+          img.className = imgClass;
           img.draggable = false;
           sq.appendChild(img);
           sq.classList.add(piece.color === 'w' ? 'piece-w' : 'piece-b');

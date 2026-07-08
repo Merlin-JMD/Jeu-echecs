@@ -430,3 +430,14 @@ button:disabled{ opacity:0.4; cursor:not-allowed; }
   font-size: 13px;
   color: var(--ivory);
 }
+
+@keyframes kingFall {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-90deg) scale(0.55); }
+}
+.king-fallen{
+  animation: kingFall 0.9s ease-in forwards;
+  transform-origin: 50% 50%;
+  position: relative;
+  z-index: 30;
+}

@@ -398,3 +398,35 @@ button:disabled{ opacity:0.4; cursor:not-allowed; }
   opacity: 0.85;
 }
 .resize-handle:hover{ opacity: 1; }
+
+.promotion-modal{ max-width: 380px; text-align:center; }
+.promotion-choices{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+}
+.promotion-choice{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  background: rgba(236,230,214,0.06);
+  border: 1px solid rgba(201,162,39,0.25);
+  border-radius: 8px;
+  padding: 12px 8px;
+  cursor:pointer;
+  width: 80px;
+}
+.promotion-choice:hover{
+  background: rgba(201,162,39,0.15);
+  border-color: var(--gold);
+}
+.promotion-choice img{
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.promotion-choice span{
+  font-size: 13px;
+  color: var(--ivory);
+}

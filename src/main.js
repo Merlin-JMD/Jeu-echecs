@@ -18,6 +18,7 @@ const COLORS = [
 const game = new Chess();
 let currentLevel = LEVELS[1];
 let playerColor = 'w';
+let pendingPromotion = null;
 let colorChosen = false;
 let gameStarted = false;
 let selected = null;
@@ -40,6 +41,7 @@ const undoBtn = document.getElementById('undoBtn');
 const rulesBtn = document.getElementById('rulesBtn');
 const welcomeOverlay = document.getElementById('welcomeOverlay');
 const welcomeCloseBtn = document.getElementById('welcomeCloseBtn');
+const promotionOverlay = document.getElementById('promotionOverlay');
 
 const boardView = new BoardView({ boardEl, coordsEl, ranksEl, onSquareClick });
 
@@ -138,11 +140,22 @@ function renderColors() {
 }
 
 function onSquareClick(id) {
+  if (pendingPromotion) return;
   if (!colorChosen || !engineReady || aiThinking || game.isGameOver()) return;
   if (game.turn() !== playerColor) return;
 
   if (selected) {
     if (legalTargets.includes(id)) {
+      const moves = game.moves({ square: selected, verbose: true });
+      const promoMove = moves.find((m) => m.to === id && m.promotion);
+      if (promoMove) {
+        pendingPromotion = { from: selected, to: id };
+        selected = null;
+        legalTargets = [];
+        render();
+        showPromotionDialog();
+        return;
+      }
       makeHumanMove(selected, id);
       selected = null;
       legalTargets = [];
@@ -173,11 +186,9 @@ function selectSquare(id) {
   render();
 }
 
-function makeHumanMove(from, to) {
-  const moves = game.moves({ square: from, verbose: true });
-  const needsPromotion = moves.some((m) => m.to === to && m.promotion);
+function makeHumanMove(from, to, promotion) {
   const moveObj = { from, to };
-  if (needsPromotion) moveObj.promotion = 'q';
+  if (promotion) moveObj.promotion = promotion;
   const result = game.move(moveObj);
   if (result) lastMove = { from: result.from, to: result.to };
   if (result && !gameStarted) revealActionButtons();
@@ -371,3 +382,29 @@ if (fullscreenBtn) {
     }
   });
 }
+// --- Fenetre de choix de promotion ---
+function showPromotionDialog() {
+  const colorName = playerColor === 'w' ? 'white' : 'black';
+  const iconNames = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight' };
+  const basePath = import.meta.env.BASE_URL + 'assets/pieces/';
+  document.querySelectorAll('.promotion-choice').forEach((btn) => {
+    const piece = btn.dataset.piece;
+    const img = btn.querySelector('img');
+    const suffix = piece === 'n' ? '-right' : '';
+    img.src = basePath + iconNames[piece] + '-' + colorName + suffix + '.png';
+  });
+  promotionOverlay.classList.add('visible');
+}
+
+document.querySelectorAll('.promotion-choice').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!pendingPromotion) return;
+    const piece = btn.dataset.piece;
+    const { from, to } = pendingPromotion;
+    pendingPromotion = null;
+    promotionOverlay.classList.remove('visible');
+    makeHumanMove(from, to, piece);
+    render();
+    afterPlyPlayed();
+  });
+});

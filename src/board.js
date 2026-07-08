@@ -1,35 +1,27 @@
-// Rendu de l'\u00e9chiquier en grille de <div>, avec images 3D des pi\u00e8ces
+// Rendu de l'echiquier en grille de <div>, avec images 3D des pieces
 // et gestion de l'orientation (jouer les blancs ou les noirs).
 
 const PIECE_NAMES = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
 const PIECES_BASE_PATH = import.meta.env.BASE_URL + 'assets/pieces/';
 
-function pieceImagePath(piece, playerColor) {
+function pieceImagePath(piece, screenCol) {
   const colorName = piece.color === 'w' ? 'white' : 'black';
-  const typeName = PIECE_NAMES[piece.type];
   if (piece.type === 'n') {
-    const isMine = piece.color === playerColor;
-    const view = isMine ? 'back' : 'front';
-    return PIECES_BASE_PATH + 'knight-' + colorName + '-' + view + '.png';
+    const side = screenCol < 4 ? 'right' : 'left';
+    return PIECES_BASE_PATH + 'knight-' + colorName + '-' + side + '.png';
   }
+  const typeName = PIECE_NAMES[piece.type];
   return PIECES_BASE_PATH + typeName + '-' + colorName + '.png';
 }
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
 function idFromBoardCoords(boardRow, boardCol) {
-  // boardRow/boardCol suivent l'indexation de chess.js .board() : 0 = rang\u00e9e 8, 0 = colonne a
+  // boardRow/boardCol suivent l'indexation de chess.js .board() : 0 = rangee 8, 0 = colonne a
   return FILES[boardCol] + (8 - boardRow);
 }
 
 export class BoardView {
-  /**
-   * @param {Object} opts
-   * @param {HTMLElement} opts.boardEl
-   * @param {HTMLElement} [opts.coordsEl]
-   * @param {HTMLElement} [opts.ranksEl]
-   * @param {(squareId: string) => void} opts.onSquareClick
-   */
   constructor({ boardEl, coordsEl, ranksEl, onSquareClick }) {
     this.boardEl = boardEl;
     this.coordsEl = coordsEl;
@@ -59,17 +51,8 @@ export class BoardView {
       });
     }
   }
-
-  /**
-   * @param {Object} state
-   * @param {import('chess.js').Chess} state.game
-   * @param {string|null} state.selected
-   * @param {string[]} state.legalTargets
-   * @param {{from:string,to:string}|null} state.lastMove
-   * @param {string} state.playerColor - 'w' ou 'b', pour choisir la vue du cavalier
-   */
   render(state) {
-    const { game, selected, legalTargets, lastMove, playerColor } = state;
+    const { game, selected, legalTargets, lastMove } = state;
     this.boardEl.innerHTML = '';
     const boardState = game.board();
     const checkSquare = this.getCheckSquare(game);
@@ -88,7 +71,7 @@ export class BoardView {
         const piece = boardState[boardRow][boardCol];
         if (piece) {
           const img = document.createElement('img');
-          img.src = pieceImagePath(piece, playerColor);
+          img.src = pieceImagePath(piece, screenCol);
           img.alt = piece.type;
           img.className = 'piece-img ptype-' + piece.type;
           img.draggable = false;

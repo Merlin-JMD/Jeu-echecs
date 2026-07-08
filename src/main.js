@@ -326,3 +326,48 @@ renderLevels();
 renderColors();
 render();
 updateStatus();
+
+// --- Redimensionnement manuel de l'echiquier via poignee (coin du cadre) ---
+const resizeHandle = document.getElementById('resizeHandle');
+let currentCellSize = 95.625;
+
+function applyCellSize(size) {
+  currentCellSize = Math.max(38, Math.min(size, 200));
+  document.documentElement.style.setProperty('--cell-size', currentCellSize + 'px');
+}
+
+if (resizeHandle) {
+  let dragging = false;
+  let startX = 0;
+  let startSize = 76;
+
+  resizeHandle.addEventListener('mousedown', (e) => {
+    dragging = true;
+    startX = e.clientX;
+    startSize = currentCellSize;
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const delta = e.clientX - startX;
+    applyCellSize(startSize + delta / 8);
+  });
+
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+  });
+}
+
+applyCellSize(95.625);
+// --- Bouton plein ecran ---
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  });
+}

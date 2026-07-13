@@ -2,17 +2,13 @@ import { Chess } from 'chess.js';
 import { BoardView } from './board.js';
 import { Engine } from './engine.js';
 import './styles.css';
+import { playMoveSound, isSoundEnabled, toggleSound } from './sound.js';
 
 const LEVELS = [
   { key: 'debutant', label: 'D\u00E9butant', hint: '\u2248 800 Elo', elo: 800, skillLevel: 0, moveTime: 300, limitStrength: true },
   { key: 'intermediaire', label: 'Interm\u00E9diaire', hint: '\u2248 1300 Elo', elo: 1300, skillLevel: 5, moveTime: 500, limitStrength: true },
   { key: 'avance', label: 'Avanc\u00E9', hint: '\u2248 1800 Elo', elo: 1800, skillLevel: 12, moveTime: 900, limitStrength: true },
   { key: 'expert', label: 'Expert', hint: 'Force maximale', elo: 2850, skillLevel: 20, moveTime: 1500, limitStrength: false }
-];
-
-const COLORS = [
-  { key: 'w', label: 'Blancs', hint: 'Vous commencez' },
-  { key: 'b', label: 'Noirs', hint: "L'IA commence" }
 ];
 
 const game = new Chess();
@@ -25,19 +21,25 @@ let selected = null;
 let legalTargets = [];
 let lastMove = null;
 let aiThinking = false;
+let lastAiMove = null;
 let engineReady = false;
 let engineError = null;
+let colorLocked = false;
+let resigned = false;
 
 const boardEl = document.getElementById('board');
 const coordsEl = document.getElementById('coords');
 const ranksEl = document.getElementById('ranks');
 const statusEl = document.getElementById('status');
-const levelsEl = document.getElementById('levels');
-const colorsEl = document.getElementById('colors');
+const levelSelect = document.getElementById('levelSelect');
+const colorWhiteBtn = document.getElementById('colorWhiteBtn');
+const colorBlackBtn = document.getElementById('colorBlackBtn');
+const colorsNote = document.getElementById('colorsNote');
 const capturedWhiteEl = document.getElementById('capturedWhite');
 const capturedBlackEl = document.getElementById('capturedBlack');
 const resetBtn = document.getElementById('resetBtn');
 const undoBtn = document.getElementById('undoBtn');
+const resignBtn = document.getElementById('resignBtn');
 const rulesBtn = document.getElementById('rulesBtn');
 const welcomeOverlay = document.getElementById('welcomeOverlay');
 const welcomeCloseBtn = document.getElementById('welcomeCloseBtn');
@@ -60,37 +62,39 @@ if (!localStorage.getItem(WELCOME_SEEN_KEY)) {
 welcomeCloseBtn.addEventListener('click', hideWelcome);
 rulesBtn.addEventListener('click', showWelcome);
 
-let colorLocked = false;
-
 function colorLabel(key) {
   return key === 'w' ? 'Blancs' : 'Noirs';
 }
 
 function revealActionButtons() {
   gameStarted = true;
-  resetBtn.classList.remove('hidden-ingame');
   undoBtn.classList.remove('hidden-ingame');
+  resignBtn.classList.remove('hidden-ingame');
 }
+
+function showGameOverButtons() {
+  undoBtn.classList.add('hidden-ingame');
+  resignBtn.classList.add('hidden-ingame');
+  resetBtn.classList.remove('hidden-ingame');
+}
+
 function renderLevels() {
-  levelsEl.innerHTML = '';
-  LEVELS.forEach((lvl) => {
-    const btn = document.createElement('button');
-    btn.className = 'level-btn' + (lvl.key === currentLevel.key ? ' active' : '');
-    btn.disabled = aiThinking;
-    btn.innerHTML = `<span>${lvl.label}</span><small>${lvl.hint}</small>`;
-    btn.onclick = () => {
-      currentLevel = lvl;
-      sendLevelToEngine();
-      renderLevels();
-    };
-    levelsEl.appendChild(btn);
-  });
+  levelSelect.disabled = aiThinking;
+  levelSelect.value = currentLevel.key;
 }
 
 function sendLevelToEngine() {
   if (!engineReady) return;
   engine.setLevel(currentLevel);
 }
+
+levelSelect.addEventListener('change', () => {
+  const lvl = LEVELS.find((l) => l.key === levelSelect.value);
+  if (lvl) {
+    currentLevel = lvl;
+    sendLevelToEngine();
+  }
+});
 
 const engine = new Engine({
   onReady: () => {
@@ -111,37 +115,34 @@ const engine = new Engine({
   }
 });
 
+function chooseColor(key) {
+  playerColor = key;
+  colorChosen = true;
+  colorLocked = true;
+  boardView.setFlipped(playerColor === 'b');
+  updateStatus();
+  renderColors();
+  maybeTriggerEngineOpeningMove();
+}
+colorWhiteBtn.addEventListener('click', () => chooseColor('w'));
+colorBlackBtn.addEventListener('click', () => chooseColor('b'));
+
 function renderColors() {
   if (colorLocked) {
-    colorsEl.innerHTML = '';
-    const note = document.createElement('div');
-    note.className = 'colors-note';
-    note.innerHTML = `Vous jouez actuellement les <strong>${colorLabel(playerColor)}</strong>. La couleur alterne automatiquement \u00E0 chaque nouvelle partie.`;
-    colorsEl.appendChild(note);
-    return;
+    colorWhiteBtn.classList.add('hidden-ingame');
+    colorBlackBtn.classList.add('hidden-ingame');
+    colorsNote.innerHTML = `Vous jouez actuellement les <strong>${colorLabel(playerColor)}</strong>. La couleur alterne automatiquement \u00E0 chaque nouvelle partie.`;
+  } else {
+    colorWhiteBtn.classList.remove('hidden-ingame');
+    colorBlackBtn.classList.remove('hidden-ingame');
+    colorWhiteBtn.disabled = aiThinking;
+    colorBlackBtn.disabled = aiThinking;
+    colorsNote.innerHTML = '';
   }
-  colorsEl.innerHTML = '';
-  COLORS.forEach((c) => {
-    const btn = document.createElement('button');
-    btn.className = 'level-btn' + (c.key === playerColor && colorChosen ? ' active' : '');
-    btn.disabled = aiThinking;
-    btn.innerHTML = `<span>${c.label}</span><small>${c.hint}</small>`;
-    btn.onclick = () => {
-      playerColor = c.key;
-      colorChosen = true;
-      colorLocked = true;
-      boardView.setFlipped(playerColor === 'b');
-      updateStatus();
-      renderColors();
-      maybeTriggerEngineOpeningMove();
-    };
-    colorsEl.appendChild(btn);
-  });
 }
-
 function onSquareClick(id) {
   if (pendingPromotion) return;
-  if (!colorChosen || !engineReady || aiThinking || game.isGameOver()) return;
+  if (!colorChosen || !engineReady || aiThinking || game.isGameOver() || resigned) return;
   if (game.turn() !== playerColor) return;
 
   if (selected) {
@@ -190,13 +191,19 @@ function makeHumanMove(from, to, promotion) {
   const moveObj = { from, to };
   if (promotion) moveObj.promotion = promotion;
   const result = game.move(moveObj);
-  if (result) lastMove = { from: result.from, to: result.to };
+  if (result) {
+    lastMove = { from: result.from, to: result.to };
+    playMoveSound();
+  }
   if (result && !gameStarted) revealActionButtons();
   return result;
 }
 function afterPlyPlayed() {
   updateStatus();
-  if (game.isGameOver()) return;
+  if (game.isGameOver()) {
+    showGameOverButtons();
+    return;
+  }
   aiThinking = true;
   renderLevels();
   renderColors();
@@ -211,6 +218,9 @@ function applyEngineMove(msg) {
   aiThinking = false;
   if (result) {
     lastMove = { from: result.from, to: result.to };
+    lastAiMove = { from: result.from, to: result.to };
+    playMoveSound();
+    if (replayBtn) replayBtn.disabled = false;
   } else {
     engineError = `Coup re\u00E7u du moteur invalide (${msg.from}${msg.to}) \u2014 position d\u00E9synchronis\u00E9e.`;
   }
@@ -219,6 +229,7 @@ function applyEngineMove(msg) {
   renderLevels();
   renderColors();
   updateStatus();
+  if (game.isGameOver()) showGameOverButtons();
 }
 
 function maybeTriggerEngineOpeningMove() {
@@ -246,6 +257,7 @@ function updateCaptured() {
   capturedWhiteEl.textContent = byWhite.join(' ');
   capturedBlackEl.textContent = byBlack.join(' ');
 }
+
 function updateStatus() {
   if (!colorChosen) {
     statusEl.innerHTML = '';
@@ -257,6 +269,11 @@ function updateStatus() {
   }
   if (!engineReady) {
     statusEl.innerHTML = `<span class="thinking">Chargement du moteur Stockfish\u2026</span>`;
+    return;
+  }
+  if (resigned) {
+    const winner = playerColor === 'w' ? 'Stockfish' : 'Vous';
+    statusEl.innerHTML = `<span class="turn">Vous avez abandonn\u00E9.</span> ${winner} gagne${winner === 'Vous' ? 'z' : ''}.`;
     return;
   }
   if (game.isCheckmate()) {
@@ -297,6 +314,10 @@ function resetGame() {
   lastMove = null;
   aiThinking = false;
   engineError = null;
+  resigned = false;
+  resetBtn.classList.add('hidden-ingame');
+  undoBtn.classList.remove('hidden-ingame');
+  resignBtn.classList.remove('hidden-ingame');
   render();
   updateStatus();
   maybeTriggerEngineOpeningMove();
@@ -320,6 +341,16 @@ function undoLastPlayerMove() {
   updateStatus();
 }
 
+function resignGame() {
+  if (!gameStarted || game.isGameOver() || resigned) return;
+  engine.stop();
+  resigned = true;
+  aiThinking = false;
+  render();
+  showGameOverButtons();
+  updateStatus();
+}
+
 function startNewGame() {
   if (colorLocked && colorChosen) {
     playerColor = playerColor === 'w' ? 'b' : 'w';
@@ -331,6 +362,7 @@ function startNewGame() {
 
 resetBtn.addEventListener('click', startNewGame);
 undoBtn.addEventListener('click', undoLastPlayerMove);
+resignBtn.addEventListener('click', resignGame);
 
 boardView.setFlipped(false);
 renderLevels();
@@ -338,50 +370,80 @@ renderColors();
 render();
 updateStatus();
 
-// --- Redimensionnement manuel de l'echiquier via poignee (coin du cadre) ---
-const resizeHandle = document.getElementById('resizeHandle');
-let currentCellSize = 95.625;
-
-function applyCellSize(size) {
-  currentCellSize = Math.max(38, Math.min(size, 200));
-  document.documentElement.style.setProperty('--cell-size', currentCellSize + 'px');
+// --- Ajustement automatique de la taille de l'echiquier ---
+function maxCellForViewport() {
+  const horizontalOverhead = 80;
+  const verticalOverhead = 200;
+  const maxByWidth = (window.innerWidth - horizontalOverhead) / 8;
+  const maxByHeight = (window.innerHeight - verticalOverhead) / 8;
+  return Math.max(38, Math.min(135, maxByWidth, maxByHeight));
 }
 
-if (resizeHandle) {
-  let dragging = false;
-  let startX = 0;
-  let startSize = 76;
+let cellSizeBeforeFullscreen = null;
 
-  resizeHandle.addEventListener('mousedown', (e) => {
-    dragging = true;
-    startX = e.clientX;
-    startSize = currentCellSize;
-    e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
-    const delta = e.clientX - startX;
-    applyCellSize(startSize + delta / 8);
-  });
-
-  window.addEventListener('mouseup', () => {
-    dragging = false;
-  });
+function applyResponsiveCellSize() {
+  if (document.fullscreenElement) return;
+  const optimalSize = maxCellForViewport();
+  document.documentElement.style.setProperty('--cell-size', optimalSize + 'px');
 }
 
-applyCellSize(95.625);
+window.addEventListener('resize', applyResponsiveCellSize);
+applyResponsiveCellSize();
+
 // --- Bouton plein ecran ---
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener('click', () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      cellSizeBeforeFullscreen = getComputedStyle(document.documentElement).getPropertyValue('--cell-size').trim();
+      document.documentElement.requestFullscreen().then(() => {
+        const optimalSize = maxCellForViewport();
+        document.documentElement.style.setProperty('--cell-size', optimalSize + 'px');
+      });
     } else {
       document.exitFullscreen();
     }
   });
 }
+document.addEventListener('fullscreenchange', () => {
+  if (fullscreenBtn) {
+    fullscreenBtn.textContent = document.fullscreenElement ? 'Retour affichage normal' : 'Plein ecran';
+  }
+  if (!document.fullscreenElement) {
+    if (cellSizeBeforeFullscreen) {
+      document.documentElement.style.setProperty('--cell-size', cellSizeBeforeFullscreen);
+    } else {
+      applyResponsiveCellSize();
+    }
+  }
+});
+
+// --- Bouton son ---
+const soundBtn = document.getElementById('soundBtn');
+if (soundBtn) {
+  soundBtn.textContent = isSoundEnabled() ? 'Son : On' : 'Son : Off';
+  soundBtn.addEventListener('click', () => {
+    const nowEnabled = toggleSound();
+    soundBtn.textContent = nowEnabled ? 'Son : On' : 'Son : Off';
+  });
+}
+
+// --- Bouton rejouer le dernier coup IA ---
+const replayBtn = document.getElementById('replayBtn');
+if (replayBtn) {
+  replayBtn.disabled = true;
+  replayBtn.addEventListener('click', () => {
+    if (!lastAiMove) return;
+    const fromEl = boardEl.querySelector('[data-sq="' + lastAiMove.from + '"]');
+    const toEl = boardEl.querySelector('[data-sq="' + lastAiMove.to + '"]');
+    [fromEl, toEl].forEach((el) => {
+      if (!el) return;
+      el.classList.add('replay-highlight');
+      setTimeout(() => el.classList.remove('replay-highlight'), 1800);
+    });
+  });
+}
+
 // --- Fenetre de choix de promotion ---
 function showPromotionDialog() {
   const colorName = playerColor === 'w' ? 'white' : 'black';

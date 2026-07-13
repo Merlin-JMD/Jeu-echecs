@@ -2,51 +2,57 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>&Eacute;checs &mdash; Contre Stockfish</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="wrap">
-  <header id="topHeader">
-    <h1>Jeu d'<span>&Eacute;checs</span></h1>
-  </header>
-  <div class="layout">
-    <div class="board-col">
-      <div class="board-row">
-        <div class="ranks" id="ranks"></div>
-        <div id="board" aria-label="&Eacute;chiquier"></div>
-      </div>
-      <div class="coords" id="coords"></div>
-      <div class="resize-handle" id="resizeHandle" title="Glisser pour redimensionner"></div>
-    </div>
-    <div class="panel" id="topPanel">
-      <div>
-        <h2>Niveau de Stockfish</h2>
-        <div class="levels" id="levels"></div>
-      </div>
-      <div id="colorSection">
-        <h2>Couleur</h2>
-        <div class="levels" id="colors"></div>
-      </div>
-    </div>
-  </div>
-  <div class="bottom-bar">
-    <div class="bottom-card">
-      <div class="status" id="status"></div>
-      <div class="captured" id="capturedWhite"></div>
-      <div class="captured" id="capturedBlack"></div>
-    </div>
-    <div class="bottom-card bottom-actions-card">
-      <div class="actions">
-        <button class="reset hidden-ingame" id="resetBtn">Nouvelle partie</button>
-        <button class="secondary hidden-ingame" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
-        <button class="secondary" id="rulesBtn">? Rappel des r&egrave;glements</button>
-        <button class="secondary" id="fullscreenBtn">Plein &eacute;cran</button>
-      </div>
-    </div>
+<div id="app">
+  <div id="scale-wrapper">
+    <header class="app-header">
+      <h1>Jeu d'<span>&Eacute;checs</span></h1>
+    </header>
+    <main class="app-main">
+      <section class="board-panel">
+        <div class="board-wrapper">
+          <div class="ranks" id="ranks"></div>
+          <div id="board" aria-label="&Eacute;chiquier"></div>
+        </div>
+        <div class="coords" id="coords"></div>
+        <p id="status" class="message"></p>
+        <div class="captured-row">
+          <div class="captured" id="capturedWhite"></div>
+          <div class="captured" id="capturedBlack"></div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <div id="setup-panel" class="panel">
+          <div class="controls-row">
+            <button class="btn btn--secondary" id="rulesBtn">R&egrave;glements</button>
+            <select id="levelSelect" class="level-select">
+              <option value="debutant">D&eacute;butant &mdash; &asymp; 800 Elo</option>
+              <option value="intermediaire" selected>Interm&eacute;diaire &mdash; &asymp; 1300 Elo</option>
+              <option value="avance">Avanc&eacute; &mdash; &asymp; 1800 Elo</option>
+              <option value="expert">Expert &mdash; Force maximale</option>
+            </select>
+            <button class="btn btn--secondary" id="colorWhiteBtn">Blancs</button>
+            <button class="btn btn--secondary" id="colorBlackBtn">Noirs</button>
+            <button class="btn btn--secondary" id="fullscreenBtn">Plein ecran</button>
+            <button class="btn btn--secondary" id="soundBtn">Son : On</button>
+            <button class="btn btn--secondary hidden-ingame" id="undoBtn" title="Annuler votre dernier coup">Annuler</button>
+            <button class="btn btn--secondary hidden-ingame" id="resignBtn">J'abandonne</button>
+            <button class="btn btn--primary hidden-ingame" id="resetBtn">Nouvelle partie</button>
+            <button class="btn btn--secondary" id="replayBtn">Rejouer le dernier coup jou&eacute; par IA</button>
+          </div>
+          <p class="colors-note" id="colorsNote"></p>
+        </div>
+        </div>
+      </aside>
+    </main>
   </div>
 </div>
+
 <div class="modal-overlay" id="welcomeOverlay">
   <div class="modal">
     <h2>Bienvenue au jeu d'&Eacute;checs</h2>
@@ -56,9 +62,10 @@
       <li><strong>&Eacute;tape 2</strong> &mdash; choisissez votre couleur pour la toute premi&egrave;re partie ; cela d&eacute;termine qui commence.</li>
       <li>&Agrave; partir de la deuxi&egrave;me partie, les couleurs alternent automatiquement &agrave; chaque nouvelle partie, comme le veut la tradition des tournois.</li>
     </ul>
-    <button class="reset" id="welcomeCloseBtn">Compris, commencer</button>
+    <button class="btn btn--primary" id="welcomeCloseBtn">Compris, commencer</button>
   </div>
 </div>
+
 <div class="modal-overlay" id="promotionOverlay">
   <div class="modal promotion-modal">
     <h2>Choisissez la promotion</h2>
@@ -70,6 +77,7 @@
     </div>
   </div>
 </div>
+
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
